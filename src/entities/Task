@@ -1,0 +1,83 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "implementation_id": {
+      "type": "string",
+      "description": "Reference to parent implementation"
+    },
+    "task_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "To Do",
+        "In Progress",
+        "Review",
+        "Done",
+        "Blocked"
+      ],
+      "default": "To Do"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "assignee": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "estimated_hours": {
+      "type": "number"
+    },
+    "actual_hours": {
+      "type": "number"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "Procurement",
+        "Installation",
+        "Testing",
+        "Handover"
+      ],
+      "default": "Planning"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "implementation_id",
+    "task_name"
+  ]
+}

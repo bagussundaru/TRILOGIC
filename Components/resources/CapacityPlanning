@@ -1,0 +1,267 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { AlertTriangle, TrendingUp, Users } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function CapacityPlanning({ resources, allocations }) {
+  // Calculate resource utilization
+  const getResourceUtilization = () => {
+    return resources.map(resource => {
+      const resourceAllocations = allocations.filter(
+        a => a.resource_id === resource.id && a.status === 'Active'
+      );
+      
+      const totalAllocated = resourceAllocations.reduce(
+        (sum, a) => sum + (a.allocation_percentage || 0), 
+        0
+      );
+      
+      const utilization = Math.min(totalAllocated, 100);
+      const availableCapacity = Math.max(100 - utilization, 0);
+      
+      return {
+        name: resource.full_name?.split(' ')[0] || 'Unknown',
+        fullName: resource.full_name,
+        role: resource.role,
+        allocated: utilization,
+        available: availableCapacity,
+        overallocated: totalAllocated > 100 ? totalAllocated - 100 : 0,
+        projectCount: resourceAllocations.length,
+      };
+    }).sort((a, b) => b.allocated - a.allocated);
+  };
+
+  const utilizationData = getResourceUtilization();
+  
+  // Identify bottlenecks
+  const overallocatedResources = utilizationData.filter(r => r.overallocated > 0);
+  const underutilizedResources = utilizationData.filter(r => r.allocated < 50);
+  
+  // Calculate team statistics
+  const avgUtilization = utilizationData.length > 0
+    ? Math.round(utilizationData.reduce((sum, r) => sum + r.allocated, 0) / utilizationData.length)
+    : 0;
+  
+  const totalCapacity = resources.length * 100;
+  const totalAllocated = utilizationData.reduce((sum, r) => sum + r.allocated, 0);
+  const capacityUtilization = totalCapacity > 0 ? Math.round((totalAllocated / totalCapacity) * 100) : 0;
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white px-4 py-3 shadow-lg rounded-lg border">
+          <p className="font-semibold text-gray-800 mb-2">{data.fullName}</p>
+          <p className="text-sm text-gray-600">{data.role}</p>
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-blue-600">Allocated: {data.allocated}%</p>
+            <p className="text-sm text-emerald-600">Available: {data.available}%</p>
+            {data.overallocated > 0 && (
+              <p className="text-sm text-red-600 font-medium">
+                Overallocated: {data.overallocated}%
+              </p>
+            )}
+            <p className="text-sm text-gray-500">Projects: {data.projectCount}</p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const getBarColor = (allocated) => {
+    if (allocated > 100) return '#ef4444'; // red
+    if (allocated >= 80) return '#f59e0b'; // amber
+    if (allocated >= 50) return '#3b82f6'; // blue
+    return '#10b981'; // emerald
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Team Capacity</p>
+                  <p className="text-3xl font-bold text-gray-900">{capacityUtilization}%</p>
+                  <p className="text-xs text-gray-400 mt-1">{resources.length} team members</p>
+                </div>
+                <div className="p-3 rounded-xl bg-teal-50">
+                  <Users className="w-6 h-6 text-teal-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Avg Utilization</p>
+                  <p className="text-3xl font-bold text-gray-900">{avgUtilization}%</p>
+                  <p className="text-xs text-gray-400 mt-1">across all resources</p>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-50">
+                  <TrendingUp className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Bottlenecks</p>
+                  <p className="text-3xl font-bold text-gray-900">{overallocatedResources.length}</p>
+                  <p className="text-xs text-gray-400 mt-1">overallocated resources</p>
+                </div>
+                <div className="p-3 rounded-xl bg-red-50">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Utilization Chart */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Resource Capacity & Utilization
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {utilizationData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={utilizationData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis type="number" domain={[0, 120]} tick={{ fontSize: 12 }} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={80} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="allocated" name="Allocated" radius={[0, 4, 4, 0]}>
+                    {utilizationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getBarColor(entry.allocated)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[400px] flex items-center justify-center text-gray-400">
+                <p>No capacity data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Bottlenecks & Alerts */}
+      {overallocatedResources.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Resource Bottlenecks Detected
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {overallocatedResources.map((resource, index) => (
+                  <div key={index} className="p-4 bg-red-50 rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-gray-800">{resource.fullName}</p>
+                        <p className="text-sm text-gray-500">{resource.role}</p>
+                      </div>
+                      <Badge className="bg-red-100 text-red-700">
+                        {resource.allocated}% allocated
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <Progress value={Math.min(resource.allocated, 100)} className="h-2" />
+                      <p className="text-sm text-red-600 font-medium">
+                        Overallocated by {resource.overallocated}% • {resource.projectCount} active projects
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">
+                        ⚠️ Recommendation: Redistribute workload or delay lower priority tasks
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Underutilized Resources */}
+      {underutilizedResources.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Available Capacity ({underutilizedResources.length} resources)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {underutilizedResources.slice(0, 6).map((resource, index) => (
+                  <div key={index} className="p-3 bg-emerald-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-gray-800 text-sm">{resource.fullName}</p>
+                        <p className="text-xs text-gray-500">{resource.role}</p>
+                      </div>
+                      <Badge variant="outline" className="text-emerald-700 border-emerald-300">
+                        {resource.available}% free
+                      </Badge>
+                    </div>
+                    <Progress value={resource.allocated} className="h-1.5" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </div>
+  );
+}

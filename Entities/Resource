@@ -1,0 +1,123 @@
+{
+  "name": "Resource",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Full name of the resource/team member"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "Project Manager",
+        "Technical Lead",
+        "Engineer",
+        "Technician",
+        "QA Specialist",
+        "Procurement Officer",
+        "Business Analyst",
+        "Designer",
+        "Other"
+      ],
+      "description": "Primary role"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "Engineering",
+        "IT",
+        "Procurement",
+        "Quality Assurance",
+        "Operations",
+        "PMO",
+        "Finance",
+        "HR"
+      ],
+      "description": "Department"
+    },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "Full-time",
+        "Part-time",
+        "Contract",
+        "Consultant"
+      ],
+      "default": "Full-time"
+    },
+    "location": {
+      "type": "string",
+      "description": "Primary work location"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of skills"
+    },
+    "skill_levels": {
+      "type": "object",
+      "description": "Skill proficiency levels (skill: level)",
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "Beginner",
+          "Intermediate",
+          "Advanced",
+          "Expert"
+        ]
+      }
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Cost per hour (for budget calculations)"
+    },
+    "weekly_capacity_hours": {
+      "type": "number",
+      "default": 40,
+      "description": "Available hours per week"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Available",
+        "Busy",
+        "Partially Available",
+        "On Leave",
+        "Inactive"
+      ],
+      "default": "Available"
+    },
+    "current_utilization": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Current utilization percentage"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name",
+    "role"
+  ]
+}

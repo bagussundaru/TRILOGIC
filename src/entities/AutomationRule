@@ -1,0 +1,81 @@
+{
+  "name": "AutomationRule",
+  "type": "object",
+  "properties": {
+    "rule_name": {
+      "type": "string",
+      "description": "Name of the automation rule"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rule_type": {
+      "type": "string",
+      "enum": [
+        "Status Change",
+        "Task Overdue",
+        "Risk Escalation",
+        "Budget Threshold",
+        "Milestone Alert",
+        "Resource Overallocation"
+      ],
+      "description": "Type of automation"
+    },
+    "trigger_condition": {
+      "type": "object",
+      "description": "Conditions that trigger the rule",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "description": "Actions to perform when triggered",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action_type": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "last_executed": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "execution_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "rule_name",
+    "rule_type"
+  ]
+}

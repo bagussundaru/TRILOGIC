@@ -1,0 +1,302 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Plus, 
+  Zap,
+  Clock,
+  TrendingUp,
+  CheckCircle2,
+  Edit2,
+  Trash2,
+  Loader2
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { format } from 'date-fns';
+
+import AutomationRuleForm from '../components/automation/AutomationRuleForm';
+import NotificationPanel from '../components/automation/NotificationPanel';
+
+export default function Automation() {
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
+  
+  const queryClient = useQueryClient();
+
+  const { data: automationRules = [], isLoading } = useQuery({
+    queryKey: ['automationRules'],
+    queryFn: () => base44.entities.AutomationRule.list('-created_date'),
+  });
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => base44.entities.Notification.list('-created_date', 50),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.AutomationRule.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+      setFormOpen(false);
+      setEditingRule(null);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.AutomationRule.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+      setFormOpen(false);
+      setEditingRule(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.AutomationRule.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, is_active }) => base44.entities.AutomationRule.update(id, { is_active }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['automationRules'] });
+    },
+  });
+
+  const handleEdit = (rule) => {
+    setEditingRule(rule);
+    setFormOpen(true);
+  };
+
+  const handleSave = (data) => {
+    if (editingRule) {
+      updateMutation.mutate({ id: editingRule.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const priorityColors = {
+    'Low': 'bg-gray-100 text-gray-700',
+    'Medium': 'bg-blue-100 text-blue-700',
+    'High': 'bg-orange-100 text-orange-700',
+    'Critical': 'bg-red-100 text-red-700',
+  };
+
+  const ruleTypeColors = {
+    'Status Change': 'bg-purple-100 text-purple-700',
+    'Task Overdue': 'bg-amber-100 text-amber-700',
+    'Risk Escalation': 'bg-red-100 text-red-700',
+    'Budget Threshold': 'bg-emerald-100 text-emerald-700',
+    'Milestone Alert': 'bg-blue-100 text-blue-700',
+    'Resource Overallocation': 'bg-orange-100 text-orange-700',
+  };
+
+  const activeRules = automationRules.filter(r => r.is_active).length;
+  const totalExecutions = automationRules.reduce((sum, r) => sum + (r.execution_count || 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50/50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Automation Rules</h1>
+            <p className="text-gray-500 mt-1">Automate workflows and notifications</p>
+          </div>
+          <Button 
+            onClick={() => setFormOpen(true)}
+            className="gap-2 bg-teal-600 hover:bg-teal-700"
+          >
+            <Plus className="w-4 h-4" />
+            Create Rule
+          </Button>
+        </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Rules</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{automationRules.length}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-teal-50">
+                  <Zap className="w-5 h-5 text-teal-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Active Rules</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{activeRules}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Executions</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{totalExecutions}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-50">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Notifications</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{notifications.length}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-purple-50">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Automation Rules */}
+          <div className="lg:col-span-2">
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Automation Rules</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {automationRules.length > 0 ? (
+                  <div className="space-y-3">
+                    {automationRules.map((rule, index) => (
+                      <motion.div
+                        key={rule.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-gray-800">{rule.rule_name}</h4>
+                              <Badge className={ruleTypeColors[rule.rule_type]}>
+                                {rule.rule_type}
+                              </Badge>
+                              <Badge className={priorityColors[rule.priority]}>
+                                {rule.priority}
+                              </Badge>
+                            </div>
+                            {rule.description && (
+                              <p className="text-sm text-gray-600 mb-2">{rule.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              {rule.execution_count > 0 && (
+                                <span>Executed {rule.execution_count} times</span>
+                              )}
+                              {rule.last_executed && (
+                                <span>Last: {format(new Date(rule.last_executed), 'MMM d, HH:mm')}</span>
+                              )}
+                              {rule.actions && (
+                                <span>{rule.actions.length} action(s)</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={rule.is_active}
+                              onCheckedChange={(checked) => 
+                                toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(rule)}
+                              className="h-8 w-8"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteMutation.mutate(rule.id)}
+                              className="h-8 w-8 text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-400">
+                    <Zap className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No automation rules yet</p>
+                    <Button 
+                      onClick={() => setFormOpen(true)}
+                      variant="outline"
+                      className="mt-4"
+                    >
+                      Create your first rule
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Notifications */}
+          <div className="lg:col-span-1">
+            <NotificationPanel notifications={notifications} />
+          </div>
+        </div>
+
+        {/* Form */}
+        <AutomationRuleForm
+          rule={editingRule}
+          open={formOpen}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingRule(null);
+          }}
+          onSave={handleSave}
+          isLoading={createMutation.isPending || updateMutation.isPending}
+        />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,76 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { motion } from "framer-motion";
+
+export default function ProjectHealthChart({ implementations }) {
+  const healthCounts = implementations.reduce((acc, impl) => {
+    const health = impl.health_status || 'On Track';
+    acc[health] = (acc[health] || 0) + 1;
+    return acc;
+  }, {});
+
+  const data = [
+    { name: 'On Track', value: healthCounts['On Track'] || 0, color: '#10b981' },
+    { name: 'At Risk', value: healthCounts['At Risk'] || 0, color: '#f59e0b' },
+    { name: 'Critical', value: healthCounts['Critical'] || 0, color: '#ef4444' },
+    { name: 'Completed', value: healthCounts['Completed'] || 0, color: '#6366f1' },
+  ].filter(d => d.value > 0);
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white px-4 py-2 shadow-lg rounded-lg border">
+          <p className="font-medium">{payload[0].name}</p>
+          <p className="text-gray-600">{payload[0].value} projects</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, delay: 0.2 }}
+    >
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold text-gray-800">Project Health</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value) => <span className="text-sm text-gray-600">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-gray-400">
+              No project data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}

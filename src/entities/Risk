@@ -1,0 +1,75 @@
+{
+  "name": "Risk",
+  "type": "object",
+  "properties": {
+    "implementation_id": {
+      "type": "string"
+    },
+    "risk_title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Technical",
+        "Budget",
+        "Schedule",
+        "Resource",
+        "External",
+        "Compliance"
+      ],
+      "default": "Technical"
+    },
+    "probability": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "default": "Medium"
+    },
+    "impact": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "risk_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "Mitigating",
+        "Resolved",
+        "Accepted"
+      ],
+      "default": "Open"
+    },
+    "mitigation_plan": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "implementation_id",
+    "risk_title"
+  ]
+}

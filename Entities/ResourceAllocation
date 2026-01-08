@@ -1,0 +1,73 @@
+{
+  "name": "ResourceAllocation",
+  "type": "object",
+  "properties": {
+    "resource_id": {
+      "type": "string",
+      "description": "Reference to Resource entity"
+    },
+    "implementation_id": {
+      "type": "string",
+      "description": "Reference to Implementation entity"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Reference to specific Task (optional)"
+    },
+    "allocation_type": {
+      "type": "string",
+      "enum": [
+        "Full-time",
+        "Part-time",
+        "As-needed",
+        "On-call"
+      ],
+      "default": "Part-time"
+    },
+    "allocation_percentage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage of resource capacity allocated"
+    },
+    "hours_per_week": {
+      "type": "number",
+      "description": "Allocated hours per week"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planned",
+        "Active",
+        "Completed",
+        "On Hold",
+        "Cancelled"
+      ],
+      "default": "Planned"
+    },
+    "role_in_project": {
+      "type": "string",
+      "description": "Specific role in this project/task"
+    },
+    "billable": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "resource_id",
+    "implementation_id",
+    "allocation_percentage"
+  ]
+}

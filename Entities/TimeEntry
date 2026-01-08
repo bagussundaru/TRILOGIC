@@ -1,0 +1,63 @@
+{
+  "name": "TimeEntry",
+  "type": "object",
+  "properties": {
+    "resource_id": {
+      "type": "string",
+      "description": "Reference to Resource entity"
+    },
+    "implementation_id": {
+      "type": "string",
+      "description": "Reference to Implementation entity"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Reference to Task entity"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "hours": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 24
+    },
+    "description": {
+      "type": "string"
+    },
+    "activity_type": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "Design",
+        "Development",
+        "Testing",
+        "Deployment",
+        "Meeting",
+        "Documentation",
+        "Support",
+        "Training",
+        "Other"
+      ],
+      "default": "Development"
+    },
+    "billable": {
+      "type": "boolean",
+      "default": true
+    },
+    "approved": {
+      "type": "boolean",
+      "default": false
+    },
+    "approved_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "resource_id",
+    "implementation_id",
+    "date",
+    "hours"
+  ]
+}

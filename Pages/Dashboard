@@ -1,0 +1,178 @@
+import React from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { 
+  FolderKanban, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Clock,
+  DollarSign,
+  Users,
+  Loader2
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+import MetricCard from '../components/dashboard/MetricCard';
+import ProjectHealthChart from '../components/dashboard/ProjectHealthChart';
+import BudgetChart from '../components/dashboard/BudgetChart';
+import RecentActivity from '../components/dashboard/RecentActivity';
+import UpcomingDeadlines from '../components/dashboard/UpcomingDeadlines';
+import AIChatPanel from '../components/ai/AIChatPanel';
+import AutomationEngine from '../components/automation/AutomationEngine';
+
+export default function Dashboard() {
+  const { data: implementations = [], isLoading: loadingImpl } = useQuery({
+    queryKey: ['implementations'],
+    queryFn: () => base44.entities.Implementation.list('-created_date'),
+  });
+
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: () => base44.entities.Task.list('-created_date'),
+  });
+
+  const { data: risks = [], isLoading: loadingRisks } = useQuery({
+    queryKey: ['risks'],
+    queryFn: () => base44.entities.Risk.list('-created_date'),
+  });
+
+  const { data: activities = [] } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => base44.entities.ActivityLog.list('-created_date', 20),
+  });
+
+  const { data: automationRules = [] } = useQuery({
+    queryKey: ['automationRules'],
+    queryFn: () => base44.entities.AutomationRule.list(),
+  });
+
+  const { data: allocations = [] } = useQuery({
+    queryKey: ['allocations'],
+    queryFn: () => base44.entities.ResourceAllocation.list(),
+  });
+
+  const { data: resources = [] } = useQuery({
+    queryKey: ['resources'],
+    queryFn: () => base44.entities.Resource.list(),
+  });
+
+  const isLoading = loadingImpl || loadingTasks || loadingRisks;
+
+  // Calculate metrics
+  const activeProjects = implementations.filter(i => i.status === 'In Progress' || i.status === 'Planning').length;
+  const completedProjects = implementations.filter(i => i.status === 'Completed').length;
+  const atRiskProjects = implementations.filter(i => i.health_status === 'At Risk' || i.health_status === 'Critical').length;
+  const totalBudget = implementations.reduce((sum, i) => sum + (i.budget_allocated || 0), 0);
+  const spentBudget = implementations.reduce((sum, i) => sum + (i.budget_spent || 0), 0);
+  const budgetUtilization = totalBudget > 0 ? Math.round((spentBudget / totalBudget) * 100) : 0;
+
+  const completedTasks = tasks.filter(t => t.status === 'Done').length;
+  const totalTasks = tasks.length;
+  const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const formatCurrency = (value) => {
+    if (value >= 1000000000) return `Rp ${(value / 1000000000).toFixed(1)}B`;
+    if (value >= 1000000) return `Rp ${(value / 1000000).toFixed(1)}M`;
+    return `Rp ${value.toLocaleString()}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-500">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50/50 p-6">
+      {/* Background Automation Engine */}
+      <AutomationEngine
+        implementations={implementations}
+        tasks={tasks}
+        risks={risks}
+        resources={resources}
+        allocations={allocations}
+        automationRules={automationRules}
+      />
+      
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900">Smart TRILOGIC Dashboard</h1>
+          <p className="text-gray-500 mt-1">Advanced Project Management Platform</p>
+        </motion.div>
+
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            title="Active Projects"
+            value={activeProjects}
+            subtitle={`${implementations.length} total projects`}
+            icon={FolderKanban}
+            color="blue"
+            trend="up"
+            trendValue="+12%"
+            delay={0.1}
+          />
+          <MetricCard
+            title="Completed"
+            value={completedProjects}
+            subtitle={`${taskCompletionRate}% task completion`}
+            icon={CheckCircle2}
+            color="green"
+            trend="up"
+            trendValue="+8%"
+            delay={0.2}
+          />
+          <MetricCard
+            title="At Risk"
+            value={atRiskProjects}
+            subtitle={`${risks.filter(r => r.status === 'Open').length} open risks`}
+            icon={AlertTriangle}
+            color={atRiskProjects > 0 ? "orange" : "green"}
+            delay={0.3}
+          />
+          <MetricCard
+            title="Budget"
+            value={formatCurrency(totalBudget)}
+            subtitle={`${budgetUtilization}% utilized`}
+            icon={DollarSign}
+            color="teal"
+            delay={0.4}
+          />
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ProjectHealthChart implementations={implementations} />
+          <BudgetChart implementations={implementations} />
+        </div>
+
+        {/* Activity & Deadlines Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <RecentActivity activities={activities} />
+          </div>
+          <div className="lg:col-span-1">
+            <UpcomingDeadlines implementations={implementations} tasks={tasks} />
+          </div>
+          <div className="lg:col-span-1 h-[420px]">
+            <AIChatPanel 
+              implementations={implementations} 
+              tasks={tasks} 
+              risks={risks} 
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

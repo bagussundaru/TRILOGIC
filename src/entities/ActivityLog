@@ -1,0 +1,53 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "implementation_id": {
+      "type": "string"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "Created",
+        "Updated",
+        "Deleted",
+        "Status Changed",
+        "Comment Added",
+        "Document Uploaded",
+        "Risk Added",
+        "Task Completed",
+        "Milestone Reached"
+      ],
+      "default": "Updated"
+    },
+    "entity_type": {
+      "type": "string",
+      "enum": [
+        "Implementation",
+        "Task",
+        "Risk",
+        "Document",
+        "Comment"
+      ]
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "old_value": {
+      "type": "string"
+    },
+    "new_value": {
+      "type": "string"
+    },
+    "performed_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "action_type",
+    "description"
+  ]
+}

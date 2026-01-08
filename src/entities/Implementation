@@ -1,0 +1,143 @@
+{
+  "name": "Implementation",
+  "type": "object",
+  "properties": {
+    "project_code": {
+      "type": "string",
+      "description": "Unique project identifier (e.g., PMO-2024-001)"
+    },
+    "project_name": {
+      "type": "string",
+      "description": "Name of the implementation project"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Customer/client name"
+    },
+    "customer_region": {
+      "type": "string",
+      "enum": [
+        "Jakarta",
+        "Jawa Barat",
+        "Jawa Tengah",
+        "Jawa Timur",
+        "Sumatera",
+        "Kalimantan",
+        "Sulawesi",
+        "Papua",
+        "Bali & Nusa Tenggara",
+        "Other"
+      ],
+      "description": "Customer region"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "New Installation",
+        "Upgrade",
+        "Migration",
+        "Maintenance",
+        "Emergency"
+      ],
+      "description": "Type of implementation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "In Progress",
+        "On Hold",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Planning"
+    },
+    "health_status": {
+      "type": "string",
+      "enum": [
+        "On Track",
+        "At Risk",
+        "Critical",
+        "Completed"
+      ],
+      "default": "On Track"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "target_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "actual_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "progress_percentage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0
+    },
+    "budget_allocated": {
+      "type": "number",
+      "description": "Allocated budget in IDR"
+    },
+    "budget_spent": {
+      "type": "number",
+      "description": "Spent budget in IDR",
+      "default": 0
+    },
+    "project_manager": {
+      "type": "string"
+    },
+    "team_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "device_count": {
+      "type": "number",
+      "default": 0
+    },
+    "devices_installed": {
+      "type": "number",
+      "default": 0
+    },
+    "risk_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "project_code",
+    "project_name",
+    "customer_name"
+  ]
+}

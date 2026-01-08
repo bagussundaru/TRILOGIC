@@ -1,0 +1,66 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "notification_type": {
+      "type": "string",
+      "enum": [
+        "Info",
+        "Warning",
+        "Error",
+        "Success",
+        "Milestone",
+        "Escalation"
+      ],
+      "default": "Info"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    "related_entity_type": {
+      "type": "string",
+      "enum": [
+        "Implementation",
+        "Task",
+        "Risk",
+        "Resource",
+        "Budget"
+      ]
+    },
+    "related_entity_id": {
+      "type": "string"
+    },
+    "recipient": {
+      "type": "string",
+      "description": "Email or user ID"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "action_url": {
+      "type": "string"
+    },
+    "automation_rule_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "notification_type"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "implementation_id": {
+      "type": "string"
+    },
+    "document_name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "Proposal",
+        "Contract",
+        "Technical Spec",
+        "Test Report",
+        "Invoice",
+        "PO",
+        "Approval",
+        "Other"
+      ],
+      "default": "Other"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Pending Review",
+        "Approved",
+        "Rejected",
+        "Archived"
+      ],
+      "default": "Draft"
+    },
+    "uploaded_by": {
+      "type": "string"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approval_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "document_name"
+  ]
+}

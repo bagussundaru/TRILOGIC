@@ -1,0 +1,71 @@
+import React from 'react';
+import { Card } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function MetricCard({ 
+  title, 
+  value, 
+  subtitle,
+  trend,
+  trendValue,
+  icon: Icon, 
+  color = "blue",
+  delay = 0 
+}) {
+  const colorClasses = {
+    blue: "from-blue-500 to-blue-600",
+    green: "from-emerald-500 to-emerald-600",
+    orange: "from-orange-500 to-orange-600",
+    red: "from-red-500 to-red-600",
+    purple: "from-purple-500 to-purple-600",
+    teal: "from-teal-500 to-teal-600",
+  };
+
+  const bgColorClasses = {
+    blue: "bg-blue-50",
+    green: "bg-emerald-50",
+    orange: "bg-orange-50",
+    red: "bg-red-50",
+    purple: "bg-purple-50",
+    teal: "bg-teal-50",
+  };
+
+  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
+  const trendColor = trend === "up" ? "text-emerald-600" : trend === "down" ? "text-red-500" : "text-gray-400";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+    >
+      <Card className="relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className={`absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br ${colorClasses[color]} opacity-5 transform translate-x-8 -translate-y-8`} />
+        <div className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+              <h3 className="text-3xl font-bold text-gray-900">{value}</h3>
+              {subtitle && (
+                <p className="text-sm text-gray-500">{subtitle}</p>
+              )}
+            </div>
+            {Icon && (
+              <div className={`p-3 rounded-xl ${bgColorClasses[color]}`}>
+                <Icon className={`w-6 h-6 bg-gradient-to-br ${colorClasses[color]} bg-clip-text text-transparent`} style={{ color: color === 'blue' ? '#3b82f6' : color === 'green' ? '#10b981' : color === 'orange' ? '#f97316' : color === 'red' ? '#ef4444' : color === 'purple' ? '#8b5cf6' : '#14b8a6' }} />
+              </div>
+            )}
+          </div>
+          {trendValue && (
+            <div className={`flex items-center gap-1 mt-4 ${trendColor}`}>
+              <TrendIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">{trendValue}</span>
+              <span className="text-gray-400 text-sm">vs last month</span>
+            </div>
+          )}
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
