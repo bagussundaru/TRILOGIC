@@ -16,6 +16,14 @@ import progressRouter from './routes/progress.js';
 import dailyReportsRouter from './routes/daily-reports.js';
 import paymentCertificatesRouter from './routes/payment-certificates.js';
 import sitePhotosRouter from './routes/site-photos.js';
+// PM Feature Routes
+import rabRouter from './routes/rab.js';
+import materialsRouter from './routes/materials.js';
+import rfiRouter from './routes/rfi.js';
+import issuesRouter from './routes/issues.js';
+import meetingsRouter from './routes/meetings.js';
+import subcontractorsRouter from './routes/subcontractors.js';
+import whatsappRouter from './routes/whatsapp.js';
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +69,14 @@ app.use('/api/progress', progressRouter);
 app.use('/api/daily-reports', dailyReportsRouter);
 app.use('/api/payment-certificates', paymentCertificatesRouter);
 app.use('/api/site-photos', sitePhotosRouter);
+// PM Feature Routes
+app.use('/api/rab', rabRouter);
+app.use('/api/materials', materialsRouter);
+app.use('/api/rfi', rfiRouter);
+app.use('/api/issues', issuesRouter);
+app.use('/api/meetings', meetingsRouter);
+app.use('/api/subcontractors', subcontractorsRouter);
+app.use('/api/whatsapp', whatsappRouter);
 
 // Dashboard summary endpoint
 app.get('/api/dashboard', async (req, res) => {
