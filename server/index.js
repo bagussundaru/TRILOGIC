@@ -14,6 +14,7 @@ import wbsRouter from './routes/wbs.js';
 import boqRouter from './routes/boq.js';
 import progressRouter from './routes/progress.js';
 import dailyReportsRouter from './routes/daily-reports.js';
+import paymentCertificatesRouter from './routes/payment-certificates.js';
 
 // Load environment variables
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/wbs', wbsRouter);
 app.use('/api/boq', boqRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/daily-reports', dailyReportsRouter);
+app.use('/api/payment-certificates', paymentCertificatesRouter);
 
 // Dashboard summary endpoint
 app.get('/api/dashboard', async (req, res) => {
