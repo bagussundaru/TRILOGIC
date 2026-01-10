@@ -10,6 +10,8 @@ import resourcesRouter from './routes/resources.js';
 import aiRouter from './routes/ai.js';
 import authRouter from './routes/auth.js';
 import automationRouter from './routes/automation.js';
+import wbsRouter from './routes/wbs.js';
+import boqRouter from './routes/boq.js';
 
 // Load environment variables
 dotenv.config();
@@ -38,7 +40,7 @@ app.get('/api/health', async (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         database: dbConnected ? 'connected' : 'disconnected',
-        version: '1.0.0'
+        version: '2.0.0 - Construction PMO'
     });
 });
 
@@ -49,6 +51,8 @@ app.use('/api/tasks', tasksRouter);
 app.use('/api/resources', resourcesRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/automation', automationRouter);
+app.use('/api/wbs', wbsRouter);
+app.use('/api/boq', boqRouter);
 
 // Dashboard summary endpoint
 app.get('/api/dashboard', async (req, res) => {
