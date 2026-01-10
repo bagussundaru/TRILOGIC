@@ -32,6 +32,7 @@
         "gridstack": "^12.4.2",
         "gsap": "^3.14.2",
         "lucide-react": "^0.344.0",
+        "node-fetch": "^3.3.2",
         "primevue": "^4.5.4",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -39,6 +40,7 @@
         "recharts": "^2.12.0",
         "tailwind-merge": "^2.2.1",
         "three": "^0.182.0",
+        "uuid": "^13.0.0",
         "vue-echarts": "^8.0.1"
     },
     "devDependencies": {

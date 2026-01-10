@@ -3,11 +3,18 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Initialize Nebius AI client (OpenAI-compatible)
-const client = new OpenAI({
-    baseURL: process.env.NEBIUS_API_URL || 'https://api.studio.nebius.ai/v1/',
-    apiKey: process.env.NEBIUS_API_KEY,
-});
+// Lazy initialize Nebius AI client (only when API key is available)
+let client = null;
+
+function getClient() {
+    if (!client && process.env.NEBIUS_API_KEY) {
+        client = new OpenAI({
+            baseURL: process.env.NEBIUS_API_URL || 'https://api.studio.nebius.ai/v1/',
+            apiKey: process.env.NEBIUS_API_KEY,
+        });
+    }
+    return client;
+}
 
 const MODEL = process.env.NEBIUS_MODEL || 'meta-llama/Meta-Llama-3.1-70B-Instruct';
 
@@ -40,6 +47,11 @@ Format your responses with:
  */
 export async function chat(userMessage, context = {}, history = []) {
     try {
+        const ai = getClient();
+        if (!ai) {
+            return 'AI Assistant tidak tersedia. Silakan konfigurasi NEBIUS_API_KEY.';
+        }
+
         // Build messages array
         const messages = [
             { role: 'system', content: SYSTEM_PROMPT },
@@ -68,7 +80,7 @@ export async function chat(userMessage, context = {}, history = []) {
         });
 
         // Call Nebius AI
-        const response = await client.chat.completions.create({
+        const response = await ai.chat.completions.create({
             model: MODEL,
             messages: messages,
             temperature: 0.7,

@@ -116,10 +116,14 @@ export function hasMinRole(userRole, requiredRole) {
     return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
 }
 
+// Alias for compatibility
+export const authenticateToken = authMiddleware;
+
 export default {
     generateToken,
     verifyToken,
     authMiddleware,
+    authenticateToken,
     authorize,
     ROLES,
     hasMinRole
