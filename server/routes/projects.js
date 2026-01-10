@@ -21,8 +21,7 @@ router.get('/', async (req, res) => {
             params.push(health);
         }
 
-        sql += ' ORDER BY created_at DESC LIMIT ?';
-        params.push(parseInt(limit));
+        sql += ` ORDER BY created_at DESC LIMIT ${parseInt(limit) || 50}`;
 
         const projects = await query(sql, params);
 
