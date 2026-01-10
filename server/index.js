@@ -12,6 +12,8 @@ import authRouter from './routes/auth.js';
 import automationRouter from './routes/automation.js';
 import wbsRouter from './routes/wbs.js';
 import boqRouter from './routes/boq.js';
+import progressRouter from './routes/progress.js';
+import dailyReportsRouter from './routes/daily-reports.js';
 
 // Load environment variables
 dotenv.config();
@@ -53,6 +55,8 @@ app.use('/api/ai', aiRouter);
 app.use('/api/automation', automationRouter);
 app.use('/api/wbs', wbsRouter);
 app.use('/api/boq', boqRouter);
+app.use('/api/progress', progressRouter);
+app.use('/api/daily-reports', dailyReportsRouter);
 
 // Dashboard summary endpoint
 app.get('/api/dashboard', async (req, res) => {
