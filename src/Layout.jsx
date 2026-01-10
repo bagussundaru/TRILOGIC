@@ -25,7 +25,8 @@ import {
     Sparkles,
     Search,
     Bell,
-    X
+    X,
+    HardHat
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -55,6 +56,7 @@ export default function Layout({ children, currentPageName }) {
     const navigation = [
         { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
         { name: 'Implementations', page: 'Implementations', icon: FolderKanban },
+        { name: 'Construction', page: 'Construction', icon: HardHat },
         { name: 'Resources', page: 'Resources', icon: Users },
         { name: 'Reports', page: 'Reports', icon: BarChart3 },
         { name: 'Automation', page: 'Automation', icon: Sparkles },
@@ -205,8 +207,8 @@ export default function Layout({ children, currentPageName }) {
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className={`lg:hidden fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${scrolled
-                        ? 'h-16 bg-white/90 backdrop-blur-xl shadow-lg shadow-slate-200/50'
-                        : 'h-16 bg-white/80 backdrop-blur-md border-b border-slate-100'
+                    ? 'h-16 bg-white/90 backdrop-blur-xl shadow-lg shadow-slate-200/50'
+                    : 'h-16 bg-white/80 backdrop-blur-md border-b border-slate-100'
                     }`}
             >
                 <div className="h-full px-4 flex items-center justify-between">

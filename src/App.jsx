@@ -8,6 +8,7 @@ import Implementations from './pages/Implementations';
 import Resources from './pages/Resources';
 import Automation from './pages/Automation';
 import Reports from './pages/Reports';
+import Construction from './pages/Construction';
 import LoginPage from './pages/LoginPage';
 import { Loader2 } from 'lucide-react';
 
@@ -81,6 +82,12 @@ function AppRoutes() {
             <Route path="/implementations" element={
                 <ProtectedRoute>
                     <Layout currentPageName="Implementations"><Implementations /></Layout>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/construction" element={
+                <ProtectedRoute>
+                    <Layout currentPageName="Construction"><Construction /></Layout>
                 </ProtectedRoute>
             } />
 
