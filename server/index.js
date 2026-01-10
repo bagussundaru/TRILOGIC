@@ -15,6 +15,7 @@ import boqRouter from './routes/boq.js';
 import progressRouter from './routes/progress.js';
 import dailyReportsRouter from './routes/daily-reports.js';
 import paymentCertificatesRouter from './routes/payment-certificates.js';
+import sitePhotosRouter from './routes/site-photos.js';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/api/boq', boqRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/daily-reports', dailyReportsRouter);
 app.use('/api/payment-certificates', paymentCertificatesRouter);
+app.use('/api/site-photos', sitePhotosRouter);
 
 // Dashboard summary endpoint
 app.get('/api/dashboard', async (req, res) => {
