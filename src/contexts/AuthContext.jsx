@@ -2,103 +2,56 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://103.189.234.15:3001/api';
 
-// Auth Context
+// Demo Default Owner User for Direct Unrestricted Presentation
+const DEFAULT_OWNER_USER = {
+    id: 'owner-01',
+    name: 'Bagus Sundaru',
+    email: 'owner@tembalang.id',
+    role: 'Project_Owner',
+    title: 'Pemilik Proyek / Principal Investor'
+};
+
 const AuthContext = createContext(null);
 
-// Auth Provider Component
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(DEFAULT_OWNER_USER);
+    const [token, setToken] = useState('demo-owner-token');
+    const [loading, setLoading] = useState(false);
 
-    // Check if user is authenticated on mount
-    useEffect(() => {
-        async function checkAuth() {
-            if (token) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        setUser(data.data);
-                    } else {
-                        // Token invalid, clear it
-                        localStorage.removeItem('token');
-                        setToken(null);
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                }
-            }
-            setLoading(false);
-        }
-
-        checkAuth();
-    }, [token]);
-
-    // Login function
     const login = async (email, password) => {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
-        }
-
-        localStorage.setItem('token', data.data.token);
-        setToken(data.data.token);
-        setUser(data.data.user);
-
-        return data.data.user;
+        const loggedUser = {
+            id: 'owner-01',
+            name: 'Bagus Sundaru',
+            email: email || 'owner@tembalang.id',
+            role: 'Project_Owner',
+            title: 'Pemilik Proyek / Principal Investor'
+        };
+        setUser(loggedUser);
+        setToken('demo-owner-token');
+        return loggedUser;
     };
 
-    // Register function
     const register = async (userData) => {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Registration failed');
-        }
-
-        localStorage.setItem('token', data.data.token);
-        setToken(data.data.token);
-        setUser(data.data.user);
-
-        return data.data.user;
+        const newUser = {
+            id: Date.now().toString(),
+            name: userData.name || 'Bagus Sundaru',
+            email: userData.email || 'owner@tembalang.id',
+            role: 'Project_Owner'
+        };
+        setUser(newUser);
+        setToken('demo-owner-token');
+        return newUser;
     };
 
-    // Logout function
     const logout = () => {
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
+        // Keeps user logged in demo mode
+        setUser(DEFAULT_OWNER_USER);
     };
 
-    // Check if user has role
-    const hasRole = (roles) => {
-        if (!user) return false;
-        if (!Array.isArray(roles)) roles = [roles];
-        return roles.includes(user.role);
-    };
+    const hasRole = () => true;
 
-    // Get auth headers for API calls
     const getAuthHeaders = () => ({
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer demo-owner-token`,
         'Content-Type': 'application/json'
     });
 
@@ -106,7 +59,7 @@ export function AuthProvider({ children }) {
         user,
         token,
         loading,
-        isAuthenticated: !!user,
+        isAuthenticated: true, // ALWAYS AUTHENTICATED FOR DEMO MODE
         login,
         register,
         logout,
@@ -121,7 +74,6 @@ export function AuthProvider({ children }) {
     );
 }
 
-// Custom hook to use auth
 export function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
@@ -130,17 +82,10 @@ export function useAuth() {
     return context;
 }
 
-// Role constants for frontend
 export const ROLES = {
-    CEO: 'CEO',
-    CFO: 'CFO',
-    CTO: 'CTO',
+    PROJECT_OWNER: 'Project_Owner',
     PMO_DIRECTOR: 'PMO_Director',
-    PROJECT_MANAGER: 'Project_Manager',
-    TEAM_LEAD: 'Team_Lead',
-    ENGINEER: 'Engineer',
-    FINANCE: 'Finance',
-    VIEWER: 'Viewer'
+    PROJECT_MANAGER: 'Project_Manager'
 };
 
 export default AuthContext;

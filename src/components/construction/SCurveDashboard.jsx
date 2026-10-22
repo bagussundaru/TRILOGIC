@@ -1,53 +1,22 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { motion } from 'framer-motion';
 import {
-    TrendingUp, TrendingDown, Activity, Target, DollarSign,
-    Calendar, AlertTriangle, CheckCircle, Clock, BarChart2
+    TrendingUp, Activity, Target, DollarSign,
+    Calendar, CheckCircle
 } from 'lucide-react';
+import { useCivil } from '@/contexts/CivilContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 
-const API_BASE_URL = 'http://103.189.234.15:3001/api';
-
-export default function SCurveDashboard({ projectId, projectName = 'Project' }) {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [viewMode, setViewMode] = useState('cumulative'); // cumulative or periodic
+export default function SCurveDashboard({ projectId, projectName }) {
+    const { projects, sCurveData } = useCivil();
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
 
-    // Fetch S-Curve data
-    const fetchData = useCallback(async () => {
-        if (!projectId) return;
-
-        try {
-            setIsLoading(true);
-            const token = localStorage.getItem('trilogic_token');
-
-            const response = await fetch(`${API_BASE_URL}/progress/project/${projectId}/s-curve`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                setData(result.data);
-            }
-        } catch (error) {
-            console.error('Error fetching S-Curve data:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [projectId]);
+    const project = projects[0];
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    // Render S-Curve chart
-    useEffect(() => {
-        if (!chartRef.current || !data?.sCurve) return;
+        if (!chartRef.current || !sCurveData) return;
 
         chartInstance.current = echarts.init(chartRef.current);
 
@@ -58,79 +27,63 @@ export default function SCurveDashboard({ projectId, projectName = 'Project' }) 
                 borderColor: '#e2e8f0',
                 textStyle: { color: '#1e293b', fontSize: 12 },
                 formatter: (params) => {
-                    let html = `<strong>${params[0].axisValue}</strong><br/>`;
-                    params.forEach(p => {
-                        html += `${p.marker} ${p.seriesName}: Rp ${p.value?.toLocaleString() || 0} Jt<br/>`;
+                    let result = `<div class="font-bold border-b pb-1 mb-1">${params[0].axisValue}</div>`;
+                    params.forEach((param) => {
+                        if (param.value !== null && param.value !== undefined) {
+                            result += `<div class="flex items-center justify-between gap-4 text-xs">
+                                <span>${param.marker} ${param.seriesName}:</span>
+                                <span class="font-bold">${param.value}%</span>
+                            </div>`;
+                        }
                     });
-                    return html;
+                    return result;
                 }
             },
             legend: {
-                data: ['Planned Value (BCWS)', 'Earned Value (BCWP)', 'Actual Cost (ACWP)'],
+                data: ['Rencana Kumulatif (Target Baseline)', 'Realisasi Fisik Lapangan'],
                 bottom: 0,
-                textStyle: { fontSize: 11, color: '#64748b' }
+                textStyle: { color: '#475569', fontSize: 12 }
             },
             grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '15%',
-                top: '10%',
-                containLabel: true
+                top: 40,
+                right: 30,
+                bottom: 50,
+                left: 50
             },
             xAxis: {
                 type: 'category',
-                data: data.sCurve.periods,
-                axisLine: { lineStyle: { color: '#e2e8f0' } },
-                axisLabel: { color: '#64748b', fontSize: 10, rotate: 30 }
+                data: sCurveData.labels,
+                axisLine: { lineStyle: { color: '#cbd5e1' } },
+                axisLabel: { color: '#64748b', fontSize: 11 }
             },
             yAxis: {
                 type: 'value',
-                name: 'Nilai (Juta Rp)',
-                nameTextStyle: { color: '#64748b', fontSize: 11 },
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: '#f1f5f9' } },
-                axisLabel: {
-                    color: '#64748b',
-                    fontSize: 10,
-                    formatter: (v) => `${(v / 1000).toFixed(0)}M`
-                }
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: '#64748b', fontSize: 11 },
+                splitLine: { lineStyle: { color: '#f1f5f9' } }
             },
             series: [
                 {
-                    name: 'Planned Value (BCWS)',
+                    name: 'Rencana Kumulatif (Target Baseline)',
                     type: 'line',
-                    data: data.sCurve.planned,
                     smooth: true,
-                    lineStyle: { color: '#3b82f6', width: 2, type: 'dashed' },
-                    itemStyle: { color: '#3b82f6' },
-                    symbol: 'circle',
-                    symbolSize: 4
+                    data: sCurveData.planCumulative,
+                    lineStyle: { width: 3, color: '#9333ea', type: 'dashed' },
+                    itemStyle: { color: '#9333ea' }
                 },
                 {
-                    name: 'Earned Value (BCWP)',
+                    name: 'Realisasi Fisik Lapangan',
                     type: 'line',
-                    data: data.sCurve.earned,
                     smooth: true,
-                    lineStyle: { color: '#10b981', width: 3 },
-                    itemStyle: { color: '#10b981' },
-                    symbol: 'circle',
-                    symbolSize: 6,
+                    data: sCurveData.actualCumulative,
+                    lineStyle: { width: 4, color: '#059669' },
+                    itemStyle: { color: '#059669' },
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(16, 185, 129, 0.3)' },
-                            { offset: 1, color: 'rgba(16, 185, 129, 0)' }
+                            { offset: 0, color: 'rgba(5, 150, 105, 0.25)' },
+                            { offset: 1, color: 'rgba(5, 150, 105, 0.02)' }
                         ])
                     }
-                },
-                {
-                    name: 'Actual Cost (ACWP)',
-                    type: 'line',
-                    data: data.sCurve.actual,
-                    smooth: true,
-                    lineStyle: { color: '#ef4444', width: 2 },
-                    itemStyle: { color: '#ef4444' },
-                    symbol: 'triangle',
-                    symbolSize: 5
                 }
             ]
         };
@@ -144,361 +97,57 @@ export default function SCurveDashboard({ projectId, projectName = 'Project' }) 
             window.removeEventListener('resize', handleResize);
             chartInstance.current?.dispose();
         };
-    }, [data]);
-
-    // Format currency
-    const formatCurrency = (value) => {
-        if (value >= 1e9) return `Rp ${(value / 1e9).toFixed(1)} Miliar`;
-        if (value >= 1e6) return `Rp ${(value / 1e6).toFixed(0)} Juta`;
-        return `Rp ${value?.toLocaleString() || 0}`;
-    };
-
-    // Determine status color
-    const getStatusColor = (value, threshold = 1) => {
-        if (value >= threshold) return 'text-emerald-600';
-        if (value >= threshold * 0.9) return 'text-amber-600';
-        return 'text-red-600';
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="animate-spin w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full" />
-            </div>
-        );
-    }
-
-    if (!data) {
-        return (
-            <div className="flex flex-col items-center justify-center h-96 text-slate-400">
-                <TrendingUp className="w-16 h-16 mb-4" />
-                <p>Data tidak tersedia</p>
-            </div>
-        );
-    }
-
-    const { summary, project } = data;
+    }, [sCurveData]);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <Activity className="w-6 h-6 text-teal-600" />
-                        S-Curve & Earned Value Analysis
-                    </h2>
-                    <p className="text-sm text-slate-500">{projectName}</p>
-                </div>
+            {/* Top Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                    <CardContent className="p-5">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Target Baseline (Bulan 5)</span>
+                        <h3 className="text-2xl font-extrabold text-purple-700 mt-2">43.7%</h3>
+                        <p className="text-xs text-slate-500 font-semibold mt-1">Target Kurva S Rencana</p>
+                    </CardContent>
+                </Card>
 
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant={viewMode === 'cumulative' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setViewMode('cumulative')}
-                        className="rounded-lg"
-                    >
-                        Kumulatif
-                    </Button>
-                    <Button
-                        variant={viewMode === 'periodic' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setViewMode('periodic')}
-                        className="rounded-lg"
-                    >
-                        Periodik
-                    </Button>
-                </div>
-            </div>
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                    <CardContent className="p-5">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Realisasi Fisik Lapangan</span>
+                        <h3 className="text-2xl font-extrabold text-emerald-700 mt-2">43.7%</h3>
+                        <p className="text-xs text-emerald-600 font-semibold mt-1">On Schedule (Fase 1 100%)</p>
+                    </CardContent>
+                </Card>
 
-            {/* EVM Metrics Cards */}
-            <div className="grid grid-cols-5 gap-4">
-                <EVMCard
-                    label="BAC"
-                    subLabel="Budget at Completion"
-                    value={formatCurrency(summary.bac)}
-                    icon={Target}
-                    color="slate"
-                />
-                <EVMCard
-                    label="EV"
-                    subLabel="Earned Value"
-                    value={formatCurrency(summary.ev)}
-                    icon={TrendingUp}
-                    color="emerald"
-                    trend={summary.sv >= 0 ? '+' : ''}
-                    trendValue={`${((summary.ev / summary.bac) * 100).toFixed(1)}%`}
-                />
-                <EVMCard
-                    label="AC"
-                    subLabel="Actual Cost"
-                    value={formatCurrency(summary.ac)}
-                    icon={DollarSign}
-                    color={summary.cv >= 0 ? 'emerald' : 'red'}
-                />
-                <EVMCard
-                    label="EAC"
-                    subLabel="Estimate at Completion"
-                    value={formatCurrency(summary.eac)}
-                    icon={Calendar}
-                    color={summary.vac >= 0 ? 'emerald' : 'amber'}
-                />
-                <EVMCard
-                    label="VAC"
-                    subLabel="Variance at Completion"
-                    value={formatCurrency(summary.vac)}
-                    icon={summary.vac >= 0 ? CheckCircle : AlertTriangle}
-                    color={summary.vac >= 0 ? 'emerald' : 'red'}
-                />
-            </div>
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                    <CardContent className="p-5">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Deviasi Progress</span>
+                        <h3 className="text-2xl font-extrabold text-teal-700 mt-2">0.0%</h3>
+                        <p className="text-xs text-teal-600 font-semibold mt-1">Sesuai Rencana Proposal</p>
+                    </CardContent>
+                </Card>
 
-            {/* Performance Index Gauges */}
-            <div className="grid grid-cols-3 gap-4">
-                <PerformanceGauge
-                    title="Schedule Performance Index (SPI)"
-                    value={summary.spi}
-                    description={summary.spi >= 1 ? 'Ahead of Schedule' : 'Behind Schedule'}
-                />
-                <PerformanceGauge
-                    title="Cost Performance Index (CPI)"
-                    value={summary.cpi}
-                    description={summary.cpi >= 1 ? 'Under Budget' : 'Over Budget'}
-                />
-                <Card className="border border-slate-200">
-                    <CardHeader className="py-3 border-b border-slate-100">
-                        <CardTitle className="text-sm font-medium">Progress Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                        <div className="space-y-3">
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-slate-600">Fisik</span>
-                                    <span className="font-medium">{summary.progressPct.toFixed(1)}%</span>
-                                </div>
-                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"
-                                        style={{ width: `${Math.min(summary.progressPct, 100)}%` }}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-slate-600">Keuangan</span>
-                                    <span className="font-medium">
-                                        {((summary.ac / summary.bac) * 100).toFixed(1)}%
-                                    </span>
-                                </div>
-                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full ${summary.ac > summary.ev ? 'bg-red-500' : 'bg-blue-500'
-                                            }`}
-                                        style={{ width: `${Math.min((summary.ac / summary.bac) * 100, 100)}%` }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                    <CardContent className="p-5">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Kapasitas Unit Aktif</span>
+                        <h3 className="text-2xl font-extrabold text-slate-900 mt-2">6 dari 24 Unit</h3>
+                        <p className="text-xs text-slate-500 font-semibold mt-1">Fase 1 Beroperasi (Okupansi 95%)</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* S-Curve Chart */}
-            <Card className="border border-slate-200">
-                <CardHeader className="py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <BarChart2 className="w-5 h-5 text-teal-600" />
-                            Kurva-S Progress Proyek
-                        </CardTitle>
-                        <div className="flex items-center gap-4 text-xs">
-                            <span className="flex items-center gap-1">
-                                <span className="w-3 h-0.5 bg-blue-500 inline-block" style={{ borderStyle: 'dashed', borderWidth: '1px 0 0 0', borderColor: '#3b82f6' }} />
-                                Rencana
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <span className="w-3 h-1 bg-emerald-500 rounded inline-block" />
-                                Realisasi
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <span className="w-3 h-0.5 bg-red-500 inline-block" />
-                                Biaya Aktual
-                            </span>
-                        </div>
-                    </div>
+            {/* S-Curve ECharts Canvas */}
+            <Card className="border border-slate-200 bg-white shadow-sm">
+                <CardHeader className="border-b border-slate-100 pb-4">
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-purple-600" />
+                        Grafik Kurva S (Progres Fisik Rencana vs Realisasi Lapangan)
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                    <div ref={chartRef} style={{ height: '350px', width: '100%' }} />
+                <CardContent className="p-6">
+                    <div ref={chartRef} className="w-full h-[420px]" />
                 </CardContent>
             </Card>
-
-            {/* Variance Summary */}
-            <div className="grid grid-cols-2 gap-4">
-                <Card className="border border-slate-200">
-                    <CardHeader className="py-3 border-b border-slate-100">
-                        <CardTitle className="text-sm font-medium">Schedule Variance (SV)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className={`text-2xl font-bold ${summary.sv >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {summary.sv >= 0 ? '+' : ''}{formatCurrency(summary.sv)}
-                                </p>
-                                <p className="text-sm text-slate-500">
-                                    {summary.sv >= 0
-                                        ? '✓ Progres lebih cepat dari jadwal'
-                                        : '⚠️ Progres terlambat dari jadwal'}
-                                </p>
-                            </div>
-                            <div className={`p-3 rounded-full ${summary.sv >= 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                                {summary.sv >= 0
-                                    ? <TrendingUp className="w-6 h-6 text-emerald-600" />
-                                    : <TrendingDown className="w-6 h-6 text-red-600" />
-                                }
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border border-slate-200">
-                    <CardHeader className="py-3 border-b border-slate-100">
-                        <CardTitle className="text-sm font-medium">Cost Variance (CV)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className={`text-2xl font-bold ${summary.cv >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {summary.cv >= 0 ? '+' : ''}{formatCurrency(summary.cv)}
-                                </p>
-                                <p className="text-sm text-slate-500">
-                                    {summary.cv >= 0
-                                        ? '✓ Biaya lebih hemat dari anggaran'
-                                        : '⚠️ Biaya melebihi anggaran'}
-                                </p>
-                            </div>
-                            <div className={`p-3 rounded-full ${summary.cv >= 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                                {summary.cv >= 0
-                                    ? <DollarSign className="w-6 h-6 text-emerald-600" />
-                                    : <AlertTriangle className="w-6 h-6 text-red-600" />
-                                }
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
         </div>
-    );
-}
-
-// EVM Card Component
-function EVMCard({ label, subLabel, value, icon: Icon, color, trend, trendValue }) {
-    const colors = {
-        slate: 'from-slate-500 to-slate-600',
-        emerald: 'from-emerald-500 to-emerald-600',
-        amber: 'from-amber-500 to-amber-600',
-        red: 'from-red-500 to-red-600',
-        blue: 'from-blue-500 to-blue-600'
-    };
-
-    return (
-        <Card className="border border-slate-200">
-            <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                    <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</p>
-                        <p className="text-lg font-bold text-slate-800 mt-1">{value}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{subLabel}</p>
-                    </div>
-                    <div className={`p-2 rounded-lg bg-gradient-to-br ${colors[color]} text-white`}>
-                        <Icon className="w-4 h-4" />
-                    </div>
-                </div>
-                {trendValue && (
-                    <p className={`text-xs mt-2 ${trend === '+' ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {trend}{trendValue}
-                    </p>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
-
-// Performance Gauge Component
-function PerformanceGauge({ title, value, description }) {
-    const gaugeRef = useRef(null);
-    const gaugeInstance = useRef(null);
-
-    useEffect(() => {
-        if (!gaugeRef.current) return;
-
-        gaugeInstance.current = echarts.init(gaugeRef.current);
-
-        const color = value >= 1 ? '#10b981' : value >= 0.9 ? '#f59e0b' : '#ef4444';
-
-        const option = {
-            series: [
-                {
-                    type: 'gauge',
-                    startAngle: 180,
-                    endAngle: 0,
-                    min: 0,
-                    max: 2,
-                    splitNumber: 4,
-                    radius: '100%',
-                    center: ['50%', '75%'],
-                    axisLine: {
-                        lineStyle: {
-                            width: 15,
-                            color: [
-                                [0.45, '#ef4444'],
-                                [0.55, '#f59e0b'],
-                                [1, '#10b981']
-                            ]
-                        }
-                    },
-                    pointer: {
-                        icon: 'path://M2090.36389,615.30999 L2## Performance gauges...',
-                        length: '65%',
-                        width: 6,
-                        offsetCenter: [0, '-5%'],
-                        itemStyle: { color: '#1e293b' }
-                    },
-                    axisTick: { show: false },
-                    splitLine: { show: false },
-                    axisLabel: {
-                        distance: 20,
-                        color: '#64748b',
-                        fontSize: 10,
-                        formatter: (v) => v.toFixed(1)
-                    },
-                    detail: {
-                        fontSize: 28,
-                        fontWeight: 'bold',
-                        offsetCenter: [0, '10%'],
-                        valueAnimation: true,
-                        formatter: (v) => v.toFixed(2),
-                        color: color
-                    },
-                    data: [{ value: value }]
-                }
-            ]
-        };
-
-        gaugeInstance.current.setOption(option);
-
-        return () => gaugeInstance.current?.dispose();
-    }, [value]);
-
-    return (
-        <Card className="border border-slate-200">
-            <CardHeader className="py-2 border-b border-slate-100">
-                <CardTitle className="text-sm font-medium text-center">{title}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2">
-                <div ref={gaugeRef} style={{ height: '140px', width: '100%' }} />
-                <p className={`text-xs text-center -mt-2 ${value >= 1 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {description}
-                </p>
-            </CardContent>
-        </Card>
     );
 }

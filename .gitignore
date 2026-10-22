@@ -32,3 +32,7 @@ coverage/
 # Cache
 .cache/
 *.tsbuildinfo
+.vercel
+
+*.docx
+doc_content.txt
